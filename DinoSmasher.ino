@@ -5,11 +5,71 @@
 #include <Arduboy2.h>
 Arduboy2 arduboy;
 
-// game states
+// game states - belongs in globals.h
 #define GAME_TITLE    0
 #define GAME_PLAY     1
 #define GAME_OVER     2
 #define GAME_HIGH     3
+
+// Use instead of the above somehow
+// enum class GameState {
+// 	Title,
+// 	Play,
+// 	GameOver,
+// 	Highscores
+// };
+
+// set up variables
+int gamestate = GAME_TITLE;
+
+// belongs in title.h
+void gameTitle() {
+  arduboy.setCursor(0, 0);
+  arduboy.print(F("Title Screen\n"));
+  
+  if (arduboy.justPressed(A_BUTTON)) {
+    gamestate = GAME_PLAY;
+  }
+}
+
+// belongs in game.h
+void gamePlay() {
+  
+  drawWorld();
+  drawPlayer();
+  playerInput();
+  
+  if (arduboy.justPressed(A_BUTTON)) {
+    gamestate = GAME_OVER;
+  }
+}
+
+// belongs in over.h
+void gameOver() {
+  arduboy.setCursor(0, 0);
+  arduboy.print(F("Game Over\n"));
+  if (arduboy.justPressed(A_BUTTON)) {
+    gamestate = GAME_HIGH;
+  }
+}
+
+// belongs in high.h
+void gameHigh() {
+  arduboy.setCursor(0, 0);
+  arduboy.print(F("High Score\n"));
+  if (arduboy.justPressed(A_BUTTON)) {
+    gamestate = GAME_TITLE;
+  }
+}
+
+typedef void (*FunctionPointer) ();
+
+const FunctionPointer PROGMEM mainGameLoop[] = {
+  gameTitle,
+  gamePlay,
+  gameOver,
+  gameHigh
+};
 
 // drawing world
 #define WORLD_WIDTH   14
@@ -25,9 +85,6 @@ Arduboy2 arduboy;
 #define PLAYER_X_OFFSET    WIDTH / 2 - PLAYER_SIZE / 2
 #define PLAYER_Y_OFFSET    HEIGHT / 2 - PLAYER_SIZE / 2
 
-// set up variables
-int gamestate = GAME_TITLE;
-
 int world[WORLD_HEIGHT][WORLD_WIDTH] = {
   { TREES, GRASS, GRASS, WATER, GRASS, GRASS, GRASS, TREES, GRASS, GRASS, GRASS, GRASS, GRASS, TREES },
   { GRASS, WATER, WATER, WATER, GRASS, WATER, GRASS, GRASS, GRASS, GRASS, GRASS, STONE, GRASS, GRASS },
@@ -41,20 +98,15 @@ int world[WORLD_HEIGHT][WORLD_WIDTH] = {
 bool isSolid(int tileIndex) {
 	switch (tileIndex) {
 	  case GRASS:
+	  case WATER:
 	    return false;
-	    break;
-	    
-    case WATER:
-      return false;
-      break;
       
     case TREES:
-      return true;
-      break;
-      
     case STONE:
       return true;
-      break;
+      
+    default:
+      return true;
 	}
 }
 
@@ -125,28 +177,6 @@ void drawPlayer() {
   arduboy.fillRect(PLAYER_X_OFFSET, PLAYER_Y_OFFSET, PLAYER_SIZE, PLAYER_SIZE, BLACK);
 }
 
-// void drawWorld() {
-//   for (int y = 0; y < tilestall; y++) {
-//     for (int x = 0; x < tileswide; x++) {
-//       const int tilex = x - mapx / TILE_SIZE;
-//       const int tiley = y - mapy / TILE_SIZE;
-//       if (tilex >= 0 && tiley >= 0 && tilex < WORLD_WIDTH && tiley < WORLD_HEIGHT) {
-//         Sprites::drawOverwrite(x * TILE_SIZE + mapx % TILE_SIZE, y * TILE_SIZE + mapy % TILE_SIZE, tiles, world[tiley][tilex]);
-//       }
-//     }
-//   }
-
-//   arduboy.fillRect(0, 0, 48, 16, BLACK);
-//   arduboy.setCursor(0, 0);
-//   arduboy.print(0 - mapx);
-//   arduboy.print(",");
-//   arduboy.print(0 - mapy);
-//   arduboy.print("\n");
-//   arduboy.print(0 - mapx / TILE_SIZE);
-//   arduboy.print(",");
-//   arduboy.print(0 - mapy / TILE_SIZE);
-// }
-
 void drawWorld() {
 	const int tileswide = WIDTH / TILE_SIZE + 1;
 	const int tilestall = HEIGHT / TILE_SIZE + 1;
@@ -163,101 +193,13 @@ void drawWorld() {
 			}
 		}
 	}
-
-// 	arduboy.fillRect(0, 0, 48, 8, BLACK);
-// 	arduboy.setCursor(0, 0);
-	
-// 	// Map coordinates
-// 	arduboy.print(mapx);
-// 	arduboy.print(',');
-// 	arduboy.print(mapy);
-// 	arduboy.print('\n');
-		
-// 	// Map coordinate remainder
-// 	arduboy.print(mapx % TILE_SIZE);
-// 	arduboy.print(',');
-// 	arduboy.print(mapy % TILE_SIZE);
-// 	arduboy.print('\n');
-	
-// 	// Render coordinate without modulo
-// 	arduboy.print(1 * TILE_SIZE + mapx);
-// 	arduboy.print(',');
-// 	arduboy.print(1 * TILE_SIZE + mapy);
-// 	arduboy.print('\n');
-		
-// 	// Render coordinate with modulo
-// 	arduboy.print(1 * TILE_SIZE + mapx % TILE_SIZE);
-// 	arduboy.print(',');
-// 	arduboy.print(1 * TILE_SIZE + mapy % TILE_SIZE);
-// 	arduboy.print('\n');
-}
-
-void titleScreen() {
-  arduboy.setCursor(0, 0);
-  arduboy.print("Title Screen\n");
-  
-  if (arduboy.justPressed(A_BUTTON)) {
-    gamestate = GAME_PLAY;
-  }
-}
-
-void gamePlay() {
-  
-  drawWorld();
-  drawPlayer();
-  playerInput();
-  
-  if (arduboy.justPressed(A_BUTTON)) {
-    gamestate = GAME_OVER;
-  }
-}
-
-void gameOverScreen() {
-  arduboy.setCursor(0, 0);
-  arduboy.print("Game Over\n");
-  if (arduboy.justPressed(A_BUTTON)) {
-    gamestate = GAME_HIGH;
-  }
-}
-
-void highScoreScreen() {
-  arduboy.setCursor(0, 0);
-  arduboy.print("High Score\n");
-  if (arduboy.justPressed(A_BUTTON)) {
-    gamestate = GAME_TITLE;
-  }
-}
-
-void gameloop() {
-
-  switch(gamestate) {
-  
-    case GAME_TITLE:
-      titleScreen();
-      break;
-
-    case GAME_PLAY:
-      gamePlay();
-      break;
-
-    case GAME_OVER:
-      gameOverScreen();
-      break;
-
-    case GAME_HIGH:
-      highScoreScreen();
-      break;
-  }
-  
 }
 
 void setup() {
   
   arduboy.begin();
   arduboy.setFrameRate(45);
-  arduboy.display();
   arduboy.initRandomSeed();
-  arduboy.clear();
   
 }
 
@@ -269,6 +211,6 @@ void loop() {
 
   arduboy.pollButtons();
   arduboy.clear();
-  gameloop();
+  ((FunctionPointer) pgm_read_word (&mainGameLoop[gamestate]))();
   arduboy.display();
 }
