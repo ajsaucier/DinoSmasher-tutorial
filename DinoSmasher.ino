@@ -74,33 +74,35 @@ void playerInput() {
   int playerX = -mapx + PLAYER_X_OFFSET;
   int playerY = -mapy + PLAYER_Y_OFFSET;
   
-  int playerLeft = (playerX);
-  int playerRight = (playerX + PLAYER_SIZE);
-  int playerTop = (playerY);
-  int playerBottom = (playerY + PLAYER_SIZE);
+  // current player position
+  int playerLeft = (playerX) + 1;
+  int playerRight = (playerX + PLAYER_SIZE) - 1;
+  int playerTop = (playerY) + 1;
+  int playerBottom = (playerY + PLAYER_SIZE) - 1;
+  
+  // upcoming player position
+  int newPlayerLeft = (playerLeft - 1);
+  int newPlayerRight = playerRight + 1;
+  int newPlayerTop = (playerTop - 1);
+  int newPlayerBottom = (playerBottom + 1);
 
   // move player up and check collision with tile it's about to arrive at
   if (arduboy.pressed(UP_BUTTON) && (playerTop > 0)) {
-  	int newPlayerTop = (playerTop - 1);
-  	if (!isPointInTile(playerLeft, newPlayerTop) && !isPointInTile(playerRight, newPlayerTop))
-  	{
+  	if (!isPointInTile(playerLeft, newPlayerTop) && !isPointInTile(playerRight, newPlayerTop)) {
   		mapy += 1;
   	}
   }
   if (arduboy.pressed(DOWN_BUTTON) && (playerBottom < (WORLD_HEIGHT * TILE_SIZE))) {
-    int newPlayerBottom = (playerBottom + 1);
     if (!isPointInTile(playerLeft, newPlayerBottom) && !isPointInTile(playerRight, newPlayerBottom)) {
       mapy -= 1;
     }
   }
   if (arduboy.pressed(LEFT_BUTTON) && (playerLeft > 0)) {
-    int newPlayerLeft = (playerLeft - 1);
     if (!isPointInTile(newPlayerLeft, playerTop)  && !isPointInTile(newPlayerLeft, playerBottom)) {
       mapx += 1;
     }
   }
   if (arduboy.pressed(RIGHT_BUTTON) && (playerRight < (WORLD_WIDTH * TILE_SIZE))) {
-    int newPlayerRight = playerRight + 1;
     if (!isPointInTile(newPlayerRight, playerTop) && !isPointInTile(newPlayerRight, playerBottom)) {
       mapx -= 1;
     }
@@ -115,7 +117,7 @@ void playerInput() {
 	arduboy.print(playerTop);
 	arduboy.print('\n');
 	
-	arduboy.print(world[playerBottom / 16][playerRight / 16]);
+	arduboy.print(world[newPlayerTop / 16][playerRight / 16]);
   
 }
 
@@ -145,8 +147,7 @@ void drawPlayer() {
 //   arduboy.print(0 - mapy / TILE_SIZE);
 // }
 
-void drawWorld()
-{
+void drawWorld() {
 	const int tileswide = WIDTH / TILE_SIZE + 1;
 	const int tilestall = HEIGHT / TILE_SIZE + 1;
 
